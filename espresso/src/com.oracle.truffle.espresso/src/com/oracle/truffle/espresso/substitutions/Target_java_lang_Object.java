@@ -90,6 +90,7 @@ public final class Target_java_lang_Object {
     }
 
     @Substitution(hasReceiver = true)
+
     public static void notify(@JavaType(Object.class) StaticObject self,
                     @Inject Meta meta,
                     @Inject SubstitutionProfiler profiler) {

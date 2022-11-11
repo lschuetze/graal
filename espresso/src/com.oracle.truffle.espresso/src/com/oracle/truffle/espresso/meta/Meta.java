@@ -841,6 +841,16 @@ public final class Meta extends ContextAccessImpl {
                         .method(ALL, Name._clinit_, Signature._void) //
                         .notRequiredMethod(jdk_internal_module_ModuleLoaderMap_Modules);
 
+        // ObjectTeams init
+        org_objectteams_Team = knownKlass(Type.org_objectteams_Team);
+        org_objectteams_IBoundBase2 = knownKlass(Type.org_objectteams_IBoundBase2);
+        assert org_objectteams_IBoundBase2.isInterface();
+        org_objectteams_ITeam = knownKlass(Type.org_objectteams_ITeam);
+        assert org_objectteams_ITeam.isInterface();
+        org_objectteams_ITeam_array = org_objectteams_ITeam.array();
+
+        org_objectteams_Team_callReplace = org_objectteams_Team.requireDeclaredMethod(Name.callReplace, Signature.Object_IBoundBase2_ITeam_array_int_int_array_int_Object_array);
+
         interopDispatch = new InteropKlassesDispatch(this);
     }
 
@@ -1002,6 +1012,13 @@ public final class Meta extends ContextAccessImpl {
     public final Field java_lang_Integer_value;
     public final Field java_lang_Double_value;
     public final Field java_lang_Long_value;
+
+    // Object Teams String
+    public final ObjectKlass org_objectteams_Team;
+    public final ObjectKlass org_objectteams_ITeam;
+    public final ArrayKlass org_objectteams_ITeam_array;
+    public final ObjectKlass org_objectteams_IBoundBase2;
+    public final Method org_objectteams_Team_callReplace;
 
     // Guest String.
     public final Field java_lang_String_value;

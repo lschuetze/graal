@@ -552,6 +552,9 @@ public final class Symbol<T> extends ByteSequence {
         public static final Symbol<Name> bootModules = StaticSymbols.putName("bootModules");
         public static final Symbol<Name> descriptor = StaticSymbols.putName("descriptor");
         public static final Symbol<Name> ofSystem = StaticSymbols.putName("ofSystem");
+
+        // ObjectTeams names
+        public static final Symbol<Name> callReplace = StaticSymbols.putName("_OT$callReplace");
     }
 
     /**
@@ -871,6 +874,12 @@ public final class Symbol<T> extends ByteSequence {
         public static final Symbol<Type> com_oracle_truffle_espresso_polyglot_UnknownKeyException = StaticSymbols.putType("Lcom/oracle/truffle/espresso/polyglot/UnknownKeyException;");
         public static final Symbol<Type> com_oracle_truffle_espresso_polyglot_ForeignException = StaticSymbols.putType("Lcom/oracle/truffle/espresso/polyglot/ForeignException;");
         public static final Symbol<Type> com_oracle_truffle_espresso_polyglot_ExceptionType = StaticSymbols.putType("Lcom/oracle/truffle/espresso/polyglot/ExceptionType;");
+
+        // ObjectTeams
+        public static final Symbol<Type> org_objectteams_Team = StaticSymbols.putType("Lorg/objectteams/Team;");
+        public static final Symbol<Type> org_objectteams_ITeam = StaticSymbols.putType("Lorg/objectteams/ITeam;");
+        public static final Symbol<Type> org_objectteams_ITeam_array = StaticSymbols.putType("[Lorg/objectteams/ITeam;");
+        public static final Symbol<Type> org_objectteams_IBoundBase2 = StaticSymbols.putType("Lorg/objectteams/IBoundBase2;");
     }
 
     /**
@@ -1091,5 +1100,9 @@ public final class Symbol<T> extends ByteSequence {
         public static final Symbol<Signature> ModuleFinder_SystemModules = StaticSymbols.putSignature(Type.java_lang_module_ModuleFinder, Type.jdk_internal_module_SystemModules);
         public static final Symbol<Signature> ModuleFinder_Path_array = StaticSymbols.putSignature(Type.java_lang_module_ModuleFinder, Type.java_nio_file_Path_array);
         public static final Symbol<Signature> ModuleFinder_ModuleFinder_array = StaticSymbols.putSignature(Type.java_lang_module_ModuleFinder, Type.java_lang_module_ModuleFinder_array);
+
+        // ObjectTeams signatures
+        public static final Symbol<Signature> Object_IBoundBase2_ITeam_array_int_int_array_int_Object_array = StaticSymbols.putSignature(Type.java_lang_Object,
+                Type.org_objectteams_IBoundBase2, Type.org_objectteams_ITeam_array, Type._int, Type._int_array, Type._int, Type.java_lang_Object_array);
     }
 }
