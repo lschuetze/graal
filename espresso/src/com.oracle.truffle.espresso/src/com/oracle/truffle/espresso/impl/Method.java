@@ -1058,7 +1058,13 @@ public final class Method extends Member<Signature> implements TruffleObject, Co
         return instance;
     }
 
+    // Method is bound by role class callin
+    public boolean isBoundMethod() {
+        // todo Lars
+        return false;
+    }
     public final class MethodVersion implements MethodRef, ModifiersProvider {
+
         private final ObjectKlass.KlassVersion klassVersion;
         private final RuntimeConstantPool pool;
         private final LinkedMethod linkedMethod;

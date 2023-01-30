@@ -555,6 +555,10 @@ public final class Symbol<T> extends ByteSequence {
         public static final Symbol<Name> bootModules = StaticSymbols.putName("bootModules");
         public static final Symbol<Name> descriptor = StaticSymbols.putName("descriptor");
         public static final Symbol<Name> ofSystem = StaticSymbols.putName("ofSystem");
+
+        // todo Lars: keep role related names here
+        public static final Symbol<Name> RoleBaseBindings = StaticSymbols.putName("CallinRoleBaseBindings");
+        public static final Symbol<Name> CallinBindings = StaticSymbols.putName("OTDynCallinBindings");
     }
 
     /**

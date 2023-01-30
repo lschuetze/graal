@@ -2300,6 +2300,9 @@ public final class BytecodeNode extends AbstractInstrumentableBytecodeNode imple
 
         if (resolved.isPolySignatureIntrinsic()) {
             invoke = new InvokeHandleNode(resolved, getDeclaringKlass(), top, curBCI);
+        } else if (opcode == INVOKEVIRTUAL && resolved.isBoundMethod()) {
+            // TODO lars: implement quickening for roles
+            invoke = null;
         } else {
             // @formatter:off
             switch (resolvedOpCode) {

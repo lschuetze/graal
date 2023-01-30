@@ -55,6 +55,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.oracle.truffle.espresso.classfile.attributes.CallinBindingsAttribute;
+import com.oracle.truffle.espresso.classfile.attributes.CallinRoleBaseBindingsAttribute;
 import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.espresso.classfile.ConstantPool.Tag;
@@ -179,6 +181,7 @@ public final class ClassfileParser {
     boolean verifiable;
 
     private ConstantPool pool;
+    private int baseMethodCount;
 
     private ClassfileParser(ClassLoadingEnv env, ClassfileStream stream, boolean verifiable, Symbol<Type> requestedClassType, ClassRegistry.ClassDefinitionInfo info) {
         this.requestedClassType = requestedClassType;
@@ -951,6 +954,9 @@ public final class ClassfileParser {
         InnerClassesAttribute innerClasses = null;
         PermittedSubclassesAttribute permittedSubclasses = null;
         RecordAttribute record = null;
+        //todo Lars: check role related attributes
+        CallinRoleBaseBindingsAttribute callinRoleBaseBindings = null;
+        CallinBindingsAttribute callinBindingsAttribute = null;
 
         CommonAttributeParser commonAttributeParser = new CommonAttributeParser(InfoType.Class);
 
@@ -978,6 +984,17 @@ public final class ClassfileParser {
                     throw ConstantPool.classFormatError("Duplicate InnerClasses attribute");
                 }
                 classAttributes[i] = innerClasses = parseInnerClasses(attributeName);
+            } else if (attributeName.equals(Name.RoleBaseBindings)) {
+                //TODO Lars: Check all role-specific bindings needed
+                if (callinRoleBaseBindings != null) {
+                    throw ConstantPool.classFormatError("Duplicate RoleBaseBindings attribute");
+                }
+                classAttributes[i] = callinRoleBaseBindings = parseCallinRoleBaseBindings(attributeName);
+            } else if (attributeName.equals(Name.CallinBindings)) {
+                if (callinBindingsAttribute != null) {
+                    throw ConstantPool.classFormatError("Duplicate CallinBindings attribute");
+                }
+                classAttributes[i] = callinBindingsAttribute = parseCallinMethodBindings(attributeName);
             } else if (majorVersion >= JAVA_1_5_VERSION) {
                 if (majorVersion >= JAVA_7_VERSION && attributeName.equals(Name.BootstrapMethods)) {
                     if (bootstrapMethods != null) {
@@ -1724,6 +1741,64 @@ public final class ClassfileParser {
             }
         }
         return interfaces;
+    }
+
+    // todo Lars: add parsing methods for role metadata
+    private CallinRoleBaseBindingsAttribute parseCallinRoleBaseBindings(Symbol<Name> bindingsAttributeName) {
+        assert CallinRoleBaseBindingsAttribute.NAME.equals(bindingsAttributeName);
+        int count = stream.readS2();
+        CallinRoleBaseBindingsAttribute.BindingInfo[] components = new CallinRoleBaseBindingsAttribute.BindingInfo[count];
+        for (int i = 0; i < count; i++) {
+            final int roleClassIndex = stream.readU2();
+            final int baseClassIndex = stream.readU2();
+            pool.utf8At(roleClassIndex).validateUTF8();
+            pool.utf8At(baseClassIndex).validateUTF8();
+            components[i] = new CallinRoleBaseBindingsAttribute.BindingInfo(roleClassIndex, baseClassIndex);
+        }
+        return new CallinRoleBaseBindingsAttribute(bindingsAttributeName, components);
+    }
+
+    private CallinBindingsAttribute parseCallinMethodBindings(Symbol<Name> callinBindingsAttributeName) {
+        assert CallinBindingsAttribute.NAME.equals(callinBindingsAttributeName);
+        int count = stream.readS2();
+        CallinBindingsAttribute.MultiBinding[] bindings = new CallinBindingsAttribute.MultiBinding[count];
+        for (int i = 0; i < count; i++) {
+            final int roleNameIndex = stream.readU2();
+            final int callinLabelIndex = stream.readU2();
+            final int roleSelectorIndex = stream.readU2();
+            final int roleSignatureIndex = stream.readU2();
+            final int callinModifierIndex = stream.readU2();
+            //TODO Lars: Original does readByte() and inc by 1
+            final int flags = stream.readU1();
+            final int baseClassNameIndex = stream.readU2();
+            //Orig: skip filename & lineNumber & lineOffset
+            stream.skip(6);
+            pool.utf8At(roleNameIndex).validateUTF8();
+            pool.utf8At(callinLabelIndex).validateUTF8();
+            pool.utf8At(callinModifierIndex).validateUTF8();
+            pool.utf8At(baseClassNameIndex).validateUTF8();
+            //TODO Lars: Check, need short value and inc by 2
+            final int baseMethodCount = stream.readS2();
+            CallinBindingsAttribute.MultiBinding.BindingInfo[] baseMethods =
+                    new CallinBindingsAttribute.MultiBinding.BindingInfo[baseMethodCount];
+            for(int k = 0; k < baseMethodCount; k++) {
+                final int baseMethodNameIndex = stream.readU2();
+                final int baseMethodSignaturIndex = stream.readU2();
+                final int declaringBaseClassNameIndex = stream.readU2();
+                final int callinId = stream.readS4();
+                final int baseFlags = stream.readU1();
+                //Orig: skip translationFlags
+                stream.skip(2);
+                pool.utf8At(baseMethodNameIndex).validateUTF8();
+                pool.utf8At(baseMethodSignaturIndex).validateUTF8();
+                pool.utf8At(declaringBaseClassNameIndex).validateUTF8();
+                baseMethods[k] = new CallinBindingsAttribute.MultiBinding.BindingInfo(baseMethodNameIndex,
+                        baseMethodSignaturIndex, declaringBaseClassNameIndex, callinId, baseFlags);
+            }
+            bindings[i] = new CallinBindingsAttribute.MultiBinding(roleNameIndex, callinLabelIndex, baseClassNameIndex,
+                    callinModifierIndex, flags, baseMethods);
+        }
+        return new CallinBindingsAttribute(callinBindingsAttributeName, bindings);
     }
 
     int getMajorVersion() {
