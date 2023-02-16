@@ -58,6 +58,7 @@ import com.oracle.truffle.espresso.analysis.hierarchy.SingleImplementor;
 import com.oracle.truffle.espresso.blocking.EspressoLock;
 import com.oracle.truffle.espresso.classfile.ConstantPool;
 import com.oracle.truffle.espresso.classfile.RuntimeConstantPool;
+import com.oracle.truffle.espresso.classfile.attributes.CallinBindingsAttribute;
 import com.oracle.truffle.espresso.classfile.attributes.ConstantValueAttribute;
 import com.oracle.truffle.espresso.classfile.attributes.EnclosingMethodAttribute;
 import com.oracle.truffle.espresso.classfile.attributes.InnerClassesAttribute;
@@ -231,6 +232,19 @@ public final class ObjectKlass extends Klass {
             initializeEspressoClass();
         }
         assert verifyTables();
+
+        // Register callins
+        Attribute callinBindings = getAttribute(Name.CallinBindings);
+        if (callinBindings != null) {
+            CallinBindingsAttribute cba = (CallinBindingsAttribute) callinBindings;
+            for (CallinBindingsAttribute.MultiBinding binding : cba.getCallinBindings()) {
+                for (CallinBindingsAttribute.MultiBinding.BindingInfo bindingInfo : binding.getBindingInfo()) {
+                    Symbol<Name> methodName = getConstantPool().symbolAt(bindingInfo.getBaseMethodNameIndex());
+                    // TODO Lars: This requires more than just the method name. Keep it for first tests.
+                    getContext().getBindingRegistry().registerBinding(methodName, binding);
+                }
+            }
+        }
     }
 
     private static boolean isEnumValuesField(LinkedField lkStaticFields) {

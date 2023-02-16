@@ -55,11 +55,23 @@ public class CallinBindingsAttribute extends Attribute {
                 this.callinId = callinId;
                 this.baseFlags = baseFlags;
             }
+
+            public int getBaseMethodNameIndex() {
+                return baseMethodNameIndex;
+            }
+        }
+
+        public BindingInfo[] getBindingInfo() {
+            return baseMethods;
         }
     }
 
     public CallinBindingsAttribute(Symbol<Name> name, MultiBinding[] callinBindings) {
         super(name, null);
         this.callinBindings = callinBindings;
+    }
+
+    public MultiBinding[] getCallinBindings() {
+        return callinBindings;
     }
 }

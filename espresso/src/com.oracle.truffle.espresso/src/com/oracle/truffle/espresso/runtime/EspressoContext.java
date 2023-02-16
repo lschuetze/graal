@@ -187,6 +187,10 @@ public final class EspressoContext {
     @CompilationFinal private EspressoBindings topBindings;
     private final WeakHashMap<StaticObject, SignalHandler> hostSignalHandlers = new WeakHashMap<>();
 
+    // region Roles
+    @CompilationFinal private BindingRegistry bindingRegistry;
+    // endregion Roles
+
     public TruffleLogger getLogger() {
         return logger;
     }
@@ -205,7 +209,11 @@ public final class EspressoContext {
         this.espressoEnv = new EspressoEnv(this, env);
         this.classLoadingEnv = new ClassLoadingEnv(getLanguage(), getLogger(), getTimers());
         this.bootClassLoaderID = classLoadingEnv.getNewLoaderId();
+
+        this.bindingRegistry = new BindingRegistry();
     }
+
+    public BindingRegistry getBindingRegistry() { return bindingRegistry; }
 
     public ClassRegistries getRegistries() {
         return registries;

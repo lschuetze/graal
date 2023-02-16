@@ -559,6 +559,8 @@ public final class Symbol<T> extends ByteSequence {
         // todo Lars: keep role related names here
         public static final Symbol<Name> RoleBaseBindings = StaticSymbols.putName("CallinRoleBaseBindings");
         public static final Symbol<Name> CallinBindings = StaticSymbols.putName("OTDynCallinBindings");
+        public static final Symbol<Name> callNext = StaticSymbols.putName("_OT$callNext");
+        public static final Symbol<Name> callAllBindings = StaticSymbols.putName("_OT$callAllBindings");
     }
 
     /**

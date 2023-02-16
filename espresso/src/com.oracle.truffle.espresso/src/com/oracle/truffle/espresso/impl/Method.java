@@ -68,11 +68,13 @@ import com.oracle.truffle.espresso.bytecode.Bytecodes;
 import com.oracle.truffle.espresso.classfile.ConstantPool;
 import com.oracle.truffle.espresso.classfile.Constants;
 import com.oracle.truffle.espresso.classfile.RuntimeConstantPool;
+import com.oracle.truffle.espresso.classfile.attributes.CallinBindingsAttribute;
 import com.oracle.truffle.espresso.classfile.attributes.CodeAttribute;
 import com.oracle.truffle.espresso.classfile.attributes.ExceptionsAttribute;
 import com.oracle.truffle.espresso.classfile.attributes.LineNumberTableAttribute;
 import com.oracle.truffle.espresso.classfile.attributes.LocalVariableTable;
 import com.oracle.truffle.espresso.classfile.attributes.SignatureAttribute;
+import com.oracle.truffle.espresso.descriptors.Names;
 import com.oracle.truffle.espresso.descriptors.Signatures;
 import com.oracle.truffle.espresso.descriptors.Symbol;
 import com.oracle.truffle.espresso.descriptors.Symbol.Name;
@@ -1058,11 +1060,27 @@ public final class Method extends Member<Signature> implements TruffleObject, Co
         return instance;
     }
 
+    // region role related
+
     // Method is bound by role class callin
     public boolean isBoundMethod() {
-        // todo Lars
+        // TODO Lars: A registry will be needed once we transferred role reslution to the call sites of bound methods
+        /*
+        Attribute attribute = declaringKlass.getAttribute(Name.CallinBindings);
+        if (attribute == null)
+            return false;
+
+        CallinBindingsAttribute bindings = (CallinBindingsAttribute) attribute;
+        getContext().getBindingRegistry().getBinding(getName());
+         */
+        if (getName().equals(Name.callAllBindings)) { // && getName().equals(Name.callNext)
+            return true;
+        }
         return false;
     }
+
+    // endregion role related
+
     public final class MethodVersion implements MethodRef, ModifiersProvider {
 
         private final ObjectKlass.KlassVersion klassVersion;

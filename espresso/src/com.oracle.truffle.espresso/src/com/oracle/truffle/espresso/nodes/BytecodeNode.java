@@ -358,6 +358,7 @@ import com.oracle.truffle.espresso.nodes.quick.interop.ReferenceArrayLoadQuickNo
 import com.oracle.truffle.espresso.nodes.quick.interop.ReferenceArrayStoreQuickNode;
 import com.oracle.truffle.espresso.nodes.quick.interop.ShortArrayLoadQuickNode;
 import com.oracle.truffle.espresso.nodes.quick.interop.ShortArrayStoreQuickNode;
+import com.oracle.truffle.espresso.nodes.quick.invoke.InvokeCallAllBindingsQuickNode;
 import com.oracle.truffle.espresso.nodes.quick.invoke.InvokeDynamicCallSiteNode;
 import com.oracle.truffle.espresso.nodes.quick.invoke.InvokeHandleNode;
 import com.oracle.truffle.espresso.nodes.quick.invoke.InvokeInterfaceQuickNode;
@@ -2300,9 +2301,13 @@ public final class BytecodeNode extends AbstractInstrumentableBytecodeNode imple
 
         if (resolved.isPolySignatureIntrinsic()) {
             invoke = new InvokeHandleNode(resolved, getDeclaringKlass(), top, curBCI);
-        } else if (opcode == INVOKEVIRTUAL && resolved.isBoundMethod()) {
+        } else if (opcode == INVOKEINTERFACE && resolved.isBoundMethod()) {
             // TODO lars: implement quickening for roles
-            invoke = null;
+            // if (opcode == INVOKEVIRTUAL && ...) {
+            // use VirtualFrame auxilary slots to add OTJ magic objects
+            // region role quickening
+            invoke = new InvokeCallAllBindingsQuickNode(resolved, top, curBCI);
+            // end region
         } else {
             // @formatter:off
             switch (resolvedOpCode) {
