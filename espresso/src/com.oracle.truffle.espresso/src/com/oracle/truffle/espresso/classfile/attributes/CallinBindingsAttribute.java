@@ -3,6 +3,7 @@ package com.oracle.truffle.espresso.classfile.attributes;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.espresso.descriptors.Symbol;
 import com.oracle.truffle.espresso.descriptors.Symbol.Name;
+import com.oracle.truffle.espresso.impl.Method;
 import com.oracle.truffle.espresso.runtime.Attribute;
 
 public class CallinBindingsAttribute extends Attribute {
@@ -18,22 +19,28 @@ public class CallinBindingsAttribute extends Attribute {
     public static class MultiBinding {
         private final int roleClassNameIndex;
         private final int callinLabelIndex;
+        private final int roleSelectorIndex;
+        private final int roleSignatureIndex;
         private final int baseClassNameIndex;
-        private final int callinModifierIndex;
+        private final int callinModifier;
         private final boolean isHandleCovariantReturn;
         private final boolean requireBaseSuperCall;
+
+        public static final MultiBinding[] EMPTY = new MultiBinding[0];
 
         @CompilerDirectives.CompilationFinal(dimensions = 1) //
         private final BindingInfo[] baseMethods;
 
-        public MultiBinding(int roleClassNameIndex, int callinLabelIndex, int baseClassNameIndex,
-                            int callinModifierIndex, int flags, BindingInfo[] baseMethods) {
+        public MultiBinding(int roleClassNameIndex, int callinLabelIndex, int roleSelectorIndex, int roleSignatureIndex,
+                            int baseClassNameIndex, int callinModifier, int flags, BindingInfo[] baseMethods) {
             this.roleClassNameIndex = roleClassNameIndex;
             this.callinLabelIndex = callinLabelIndex;
+            this.roleSelectorIndex = roleSelectorIndex;
+            this.roleSignatureIndex = roleSignatureIndex;
             this.baseClassNameIndex = baseClassNameIndex;
             //TODO Lars: Check if we need to map the callin Modifier to values later
             //BEFORE = 1, REPLACE = 2, AFTER = 3
-            this.callinModifierIndex = callinModifierIndex;
+            this.callinModifier = callinModifier;
             this.isHandleCovariantReturn = (flags & COVARIANT_BASE_RETURN) != 0;
             this.requireBaseSuperCall = (flags & BASE_SUPER_CALL) != 0;
             this.baseMethods = baseMethods;
@@ -59,11 +66,35 @@ public class CallinBindingsAttribute extends Attribute {
             public int getBaseMethodNameIndex() {
                 return baseMethodNameIndex;
             }
+
+            public int getBaseMethodSignatureIndex() {
+                return baseMethodSignatureIndex;
+            }
+
+            public int getDeclaringBaseClassIndex() {
+                return declaringBaseClassIndex;
+            }
+
+            public int getCallinId() {
+                return callinId;
+            }
         }
 
         public BindingInfo[] getBindingInfo() {
             return baseMethods;
         }
+
+        public int getBaseClassNameIndex() {
+            return baseClassNameIndex;
+        }
+
+        public int getRoleClassNameIndex() { return roleClassNameIndex; }
+
+        public int getRoleSelectorIndex() { return roleSelectorIndex; }
+
+        public int getRoleSignatureIndex() { return roleSignatureIndex; }
+
+        public int getCallinModifier() { return callinModifier; }
     }
 
     public CallinBindingsAttribute(Symbol<Name> name, MultiBinding[] callinBindings) {

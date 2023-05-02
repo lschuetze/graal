@@ -1775,8 +1775,17 @@ public final class ClassfileParser {
             stream.skip(6);
             pool.utf8At(roleNameIndex).validateUTF8();
             pool.utf8At(callinLabelIndex).validateUTF8();
+            pool.utf8At(roleSelectorIndex).validateUTF8();
+            pool.utf8At(roleSignatureIndex).validateUTF8();
             pool.utf8At(callinModifierIndex).validateUTF8();
             pool.utf8At(baseClassNameIndex).validateUTF8();
+            final int callinModifier;
+            switch(pool.utf8At(callinModifierIndex).toString()) {
+                case "before": callinModifier = 1; break;
+                case "replace": callinModifier = 2; break;
+                case "after": callinModifier = 3; break;
+                default: callinModifier = -1;
+            }
             //TODO Lars: Check, need short value and inc by 2
             final int baseMethodCount = stream.readS2();
             CallinBindingsAttribute.MultiBinding.BindingInfo[] baseMethods =
@@ -1795,8 +1804,9 @@ public final class ClassfileParser {
                 baseMethods[k] = new CallinBindingsAttribute.MultiBinding.BindingInfo(baseMethodNameIndex,
                         baseMethodSignaturIndex, declaringBaseClassNameIndex, callinId, baseFlags);
             }
-            bindings[i] = new CallinBindingsAttribute.MultiBinding(roleNameIndex, callinLabelIndex, baseClassNameIndex,
-                    callinModifierIndex, flags, baseMethods);
+            bindings[i] = new CallinBindingsAttribute.MultiBinding(roleNameIndex, callinLabelIndex,
+                    roleSelectorIndex, roleSignatureIndex, baseClassNameIndex,
+                    callinModifier, flags, baseMethods);
         }
         return new CallinBindingsAttribute(callinBindingsAttributeName, bindings);
     }

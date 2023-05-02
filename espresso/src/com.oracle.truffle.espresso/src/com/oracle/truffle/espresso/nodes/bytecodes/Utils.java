@@ -22,8 +22,14 @@
  */
 package com.oracle.truffle.espresso.nodes.bytecodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.espresso.descriptors.Symbol;
 import com.oracle.truffle.espresso.impl.Method;
+import com.oracle.truffle.espresso.impl.ObjectKlass;
+
+import static com.oracle.truffle.espresso.classfile.attributes.CallinBindingsAttribute.*;
+import static com.oracle.truffle.espresso.descriptors.Symbol.*;
 
 final class Utils {
     /**
@@ -36,5 +42,39 @@ final class Utils {
             callNode.forceInlining();
         }
         return callNode;
+    }
+
+    static MultiBinding getBindingForId(MultiBinding[] bindings, int callinId) {
+        for (MultiBinding mb : bindings) {
+            for (MultiBinding.BindingInfo info : mb.getBindingInfo()) {
+                if (info.getCallinId() == callinId) {
+                    return mb;
+                }
+            }
+        }
+        // Should not reach here
+        CompilerDirectives.shouldNotReachHere();
+        return null;
+    }
+
+    // can one do that over the iTableLookup ?
+    static Method lookupLiftMethod(ObjectKlass teamKlass, int idx) {
+        final String methodName = "_OT$liftTo$" + teamKlass.getConstantPool().symbolAt(idx).toString();
+        for (Method method : teamKlass.getDeclaredMethods()) {
+            if (method.getNameAsString().equals(methodName)) {
+                return method;
+            }
+        }
+        // should not reach here
+        CompilerDirectives.shouldNotReachHere();
+        return null;
+    }
+
+    static Method lookupRoleMethod(ObjectKlass teamKlass, ObjectKlass roleKlass, MultiBinding binding) {
+        // TODO Lars: Implement a way to use the vtable
+        // target = receiverKlass.vtableLookup(vtableIndex).getMethodVersion();
+        final Symbol<Name> methodName = teamKlass.getConstantPool().symbolAt(binding.getRoleSelectorIndex());
+        final Symbol<Signature> signature = teamKlass.getConstantPool().symbolAt(binding.getRoleSignatureIndex());
+        return roleKlass.lookupMethod(methodName, signature);
     }
 }

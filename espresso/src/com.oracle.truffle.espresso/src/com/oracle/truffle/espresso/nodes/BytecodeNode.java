@@ -2301,12 +2301,13 @@ public final class BytecodeNode extends AbstractInstrumentableBytecodeNode imple
 
         if (resolved.isPolySignatureIntrinsic()) {
             invoke = new InvokeHandleNode(resolved, getDeclaringKlass(), top, curBCI);
-        } else if (opcode == INVOKEINTERFACE && resolved.isBoundMethod()) {
+        } else if (opcode == INVOKEVIRTUAL && resolved.isBoundMethod()) {
+            // Is an interface because we call ITeam._OT$callAllBindings( ... )
             // TODO lars: implement quickening for roles
             // if (opcode == INVOKEVIRTUAL && ...) {
             // use VirtualFrame auxilary slots to add OTJ magic objects
             // region role quickening
-            invoke = new InvokeCallAllBindingsQuickNode(resolved, top, curBCI);
+            invoke = new InvokeCallAllBindingsQuickNode(resolved, this.getMethod(), top, curBCI);
             // end region
         } else {
             // @formatter:off
