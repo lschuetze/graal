@@ -3,6 +3,7 @@ package com.oracle.truffle.espresso.nodes.bytecodes;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -20,8 +21,9 @@ import com.oracle.truffle.espresso.runtime.StaticObject;
 
 import static com.oracle.truffle.espresso.descriptors.Symbol.*;
 
-@NodeInfo(shortName = "INVOKEBEFORECALLINS")
-public abstract class InvokeBeforeCallins extends InvokeCallinNode {
+@NodeInfo(shortName = "INVOKEAFTERCALLINS")
+@ImportStatic(CallinBindingsAttribute.class)
+public abstract class InvokeAfterCallins extends InvokeCallinNode {
 
     final ObjectKlass teamKlass;
     final Method baseMethod;
@@ -31,36 +33,23 @@ public abstract class InvokeBeforeCallins extends InvokeCallinNode {
 
     final int length;
 
-    @CompilerDirectives.CompilationFinal(dimensions = 1 ) //
-    final int[] scatterIndeces;
-
-    InvokeBeforeCallins(ObjectKlass teamKlass, Method baseMethod, MultiBinding[] bindings) {
+    InvokeAfterCallins(ObjectKlass teamKlass, Method baseMethod, MultiBinding[] bindings) {
         this.teamKlass = teamKlass;
         this.baseMethod = baseMethod;
         this.bindings = bindings;
-        // Over approximate the length
-        this.scatterIndeces = new int[bindings.length];
         int count = 0;
-        for(int i = 0; i < bindings.length; i++) {
-            MultiBinding mb = bindings[i];
-            if (mb.getCallinModifier() == CallinBindingsAttribute.KIND_BEFORE) {
+        for (MultiBinding mb : bindings) {
+            if (mb.getCallinModifier() == CallinBindingsAttribute.KIND_AFTER) {
                 count++;
-            } else {
-                scatterIndeces[count]++;
             }
         }
-
         this.length = count;
-
-        for (int i = 1; i < count; i++) {
-            scatterIndeces[i] += scatterIndeces[i - 1];
-        }
     }
 
     public abstract Object execute(Object[] args, StaticObject teams);
-            //StaticObject /* IBoundBase2 */ boundBase, int offset,
-            //                       StaticObject /* ITeam[] */ teams, StaticObject callinIds,
-            //                       StaticObject /* Object[] */ originalArgs);
+    //StaticObject /* IBoundBase2 */ boundBase, int offset,
+    //                       StaticObject /* ITeam[] */ teams, StaticObject callinIds,
+    //                       StaticObject /* Object[] */ originalArgs);
 
     @ExplodeLoop
     @Specialization
@@ -70,9 +59,9 @@ public abstract class InvokeBeforeCallins extends InvokeCallinNode {
                         @Bind("getOriginalArgs(args)") StaticObject originalArgs,
                         @Bind("getBoundBase(args)") StaticObject boundBase) {
 
-            //StaticObject /* IBoundBase2 */ boundBase, int offset,
-            //            StaticObject /* ITeam[] */ teams, StaticObject callinIds,
-            //            StaticObject /* Object[] */ originalArgs) {
+        //StaticObject /* IBoundBase2 */ boundBase, int offset,
+        //            StaticObject /* ITeam[] */ teams, StaticObject callinIds,
+        //            StaticObject /* Object[] */ originalArgs) {
         // TODO Lars: Compute and @Cache Binding[] for length and iterate over that
         /*
          * The int[] callinIds is actually already sorted before/after/replace.
@@ -81,19 +70,16 @@ public abstract class InvokeBeforeCallins extends InvokeCallinNode {
          */
         for (int i = 0; i < length; i++) {
             // TODO Lars: get rid of this access
-            final int updatedIndex = scatterIndeces[i] + index;
-            StaticObject team = teams.get(getLanguage(), updatedIndex);
-            final int callinId = callinIds.<int[]>unwrap(getLanguage())[updatedIndex];
-            MultiBinding binding = Utils.getBindingForId(bindings, callinId, CallinBindingsAttribute.KIND_BEFORE);
+            StaticObject team = teams.get(getLanguage(), i + index);
+            int callinId = callinIds.<int[]>unwrap(getLanguage())[i + index]; // callinIds.get(getLanguage(), i + index);
+            MultiBinding binding = Utils.getBindingForId(bindings, callinId, CallinBindingsAttribute.KIND_AFTER);
 
             if (binding == null) {
-                // This can happen when 1) we have multiple callins and dispatch over two replace bindings
-                // or 2) there is a bug in the index calculation
-                return Boolean.FALSE;
+                return null;
             }
 
             // TODO Lars: Lift and RoleCalls own AST nodes?
-            final int roleClassNameIndex = binding.getRoleClassNameIndex();
+            int roleClassNameIndex = binding.getRoleClassNameIndex();
             Method liftMethod = Utils.lookupLiftMethod(teamKlass, roleClassNameIndex);
             DirectCallNode lift = DirectCallNode.create(liftMethod.getCallTarget());
             StaticObject roleObject = (StaticObject) lift.call(team, boundBase);
@@ -110,6 +96,6 @@ public abstract class InvokeBeforeCallins extends InvokeCallinNode {
             }
             roleNode.call(roleCallArgs);
         }
-        return Boolean.TRUE;
+        return null;
     }
 }

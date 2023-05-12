@@ -25,6 +25,7 @@ package com.oracle.truffle.espresso.nodes.bytecodes;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.espresso.descriptors.Symbol;
+import com.oracle.truffle.espresso.descriptors.Symbols;
 import com.oracle.truffle.espresso.impl.Method;
 import com.oracle.truffle.espresso.impl.ObjectKlass;
 
@@ -44,16 +45,17 @@ final class Utils {
         return callNode;
     }
 
-    static MultiBinding getBindingForId(MultiBinding[] bindings, int callinId) {
+    static MultiBinding getBindingForId(MultiBinding[] bindings, int callinId, int kind) {
         for (MultiBinding mb : bindings) {
-            for (MultiBinding.BindingInfo info : mb.getBindingInfo()) {
-                if (info.getCallinId() == callinId) {
-                    return mb;
+            if (mb.getCallinModifier() == kind) {
+                for (MultiBinding.BindingInfo info : mb.getBindingInfo()) {
+                    if (info.getCallinId() == callinId) {
+                        return mb;
+                    }
                 }
             }
         }
-        // Should not reach here
-        CompilerDirectives.shouldNotReachHere();
+        //CompilerDirectives.shouldNotReachHere();
         return null;
     }
 
@@ -76,5 +78,9 @@ final class Utils {
         final Symbol<Name> methodName = teamKlass.getConstantPool().symbolAt(binding.getRoleSelectorIndex());
         final Symbol<Signature> signature = teamKlass.getConstantPool().symbolAt(binding.getRoleSignatureIndex());
         return roleKlass.lookupMethod(methodName, signature);
+    }
+
+    static Method lookupOrig(ObjectKlass baseKlass) {
+        return baseKlass.lookupMethod(Name.callOrig, Signature.Object_int_Object_array);
     }
 }

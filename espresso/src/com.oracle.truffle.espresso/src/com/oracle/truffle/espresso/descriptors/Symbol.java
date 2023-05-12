@@ -561,7 +561,7 @@ public final class Symbol<T> extends ByteSequence {
         public static final Symbol<Name> CallinBindings = StaticSymbols.putName("OTDynCallinBindings");
         public static final Symbol<Name> callNext = StaticSymbols.putName("_OT$callNext");
         public static final Symbol<Name> callAllBindings = StaticSymbols.putName("callAllBindingsTruffle");
-        public static final Symbol<Name> liftMethodPrec = StaticSymbols.putName("_OT$liftTo$");
+        public static final Symbol<Name> callOrig = StaticSymbols.putName("_OT$callOrig");
     }
 
     /**
@@ -888,6 +888,9 @@ public final class Symbol<T> extends ByteSequence {
         public static final Symbol<Type> com_oracle_truffle_espresso_polyglot_UnknownKeyException = StaticSymbols.putType("Lcom/oracle/truffle/espresso/polyglot/UnknownKeyException;");
         public static final Symbol<Type> com_oracle_truffle_espresso_polyglot_ForeignException = StaticSymbols.putType("Lcom/oracle/truffle/espresso/polyglot/ForeignException;");
         public static final Symbol<Type> com_oracle_truffle_espresso_polyglot_ExceptionType = StaticSymbols.putType("Lcom/oracle/truffle/espresso/polyglot/ExceptionType;");
+
+        // Role types
+        public static final Symbol<Type> org_objectteams_IBoundBase2 = StaticSymbols.putType("Lorg/objectteams/IBoundBase2;");
     }
 
     /**
@@ -1119,5 +1122,8 @@ public final class Symbol<T> extends ByteSequence {
         public static final Symbol<Signature> ModuleFinder_SystemModules = StaticSymbols.putSignature(Type.java_lang_module_ModuleFinder, Type.jdk_internal_module_SystemModules);
         public static final Symbol<Signature> ModuleFinder_Path_array = StaticSymbols.putSignature(Type.java_lang_module_ModuleFinder, Type.java_nio_file_Path_array);
         public static final Symbol<Signature> ModuleFinder_ModuleFinder_array = StaticSymbols.putSignature(Type.java_lang_module_ModuleFinder, Type.java_lang_module_ModuleFinder_array);
+
+        // Role Signatures
+        public static final Symbol<Signature> Object_int_Object_array = StaticSymbols.putSignature(Type.java_lang_Object, Type._int, Type.java_lang_Object_array);
     }
 }

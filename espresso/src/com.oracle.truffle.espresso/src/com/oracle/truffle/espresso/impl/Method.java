@@ -1073,7 +1073,14 @@ public final class Method extends Member<Signature> implements TruffleObject, Co
         CallinBindingsAttribute bindings = (CallinBindingsAttribute) attribute;
         getContext().getBindingRegistry().getBinding(getName());
          */
-        if (getName().equals(Name.callAllBindings)) { // && getName().equals(Name.callNext)
+        if (getName().equals(Name.callAllBindings)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isCallNext() {
+        if (getName().equals(Name.callNext)) {
             return true;
         }
         return false;

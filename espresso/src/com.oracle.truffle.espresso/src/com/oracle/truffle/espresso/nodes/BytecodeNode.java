@@ -286,6 +286,8 @@ import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameInstance;
+import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
@@ -359,6 +361,7 @@ import com.oracle.truffle.espresso.nodes.quick.interop.ReferenceArrayStoreQuickN
 import com.oracle.truffle.espresso.nodes.quick.interop.ShortArrayLoadQuickNode;
 import com.oracle.truffle.espresso.nodes.quick.interop.ShortArrayStoreQuickNode;
 import com.oracle.truffle.espresso.nodes.quick.invoke.InvokeCallAllBindingsQuickNode;
+import com.oracle.truffle.espresso.nodes.quick.invoke.InvokeCallNextQuickNode;
 import com.oracle.truffle.espresso.nodes.quick.invoke.InvokeDynamicCallSiteNode;
 import com.oracle.truffle.espresso.nodes.quick.invoke.InvokeHandleNode;
 import com.oracle.truffle.espresso.nodes.quick.invoke.InvokeInterfaceQuickNode;
@@ -2302,13 +2305,32 @@ public final class BytecodeNode extends AbstractInstrumentableBytecodeNode imple
         if (resolved.isPolySignatureIntrinsic()) {
             invoke = new InvokeHandleNode(resolved, getDeclaringKlass(), top, curBCI);
         } else if (opcode == INVOKEVIRTUAL && resolved.isBoundMethod()) {
+            // region roleQuickening
+
             // Is an interface because we call ITeam._OT$callAllBindings( ... )
-            // TODO lars: implement quickening for roles
-            // if (opcode == INVOKEVIRTUAL && ...) {
             // use VirtualFrame auxilary slots to add OTJ magic objects
-            // region role quickening
             invoke = new InvokeCallAllBindingsQuickNode(resolved, this.getMethod(), top, curBCI);
-            // end region
+        } else if (opcode == INVOKEVIRTUAL && resolved.isCallNext()) {
+            // use VirtualFrame auxilary slots to add OTJ magic objects
+            // TODO Lars: Should this be protected by an assumption?
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            FrameInstance iteratedFrame = Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<FrameInstance>() {
+                @Override
+                public FrameInstance visitFrame(FrameInstance frameInstance) {
+                    EspressoRootNode rootNode = getContext().getVM().getEspressoRootFromFrame(frameInstance);
+                    Frame visitedFrame = frameInstance.getFrame(FrameInstance.FrameAccess.READ_ONLY);
+                    Method m = rootNode.readFrameBaseMethodOrNull(visitedFrame);
+                    if (m != null) {
+                        return frameInstance;
+                    }
+                    return null;
+                }
+            });
+            Frame otherFrame = iteratedFrame.getFrame(FrameInstance.FrameAccess.READ_ONLY);
+            EspressoRootNode rootNode = (EspressoRootNode) getRootNode();
+            Method baseMethod = rootNode.readFrameBaseMethodOrNull(otherFrame);
+            invoke = new InvokeCallNextQuickNode(resolved, baseMethod, top, curBCI);
+            // endregion roleQuickening
         } else {
             // @formatter:off
             switch (resolvedOpCode) {

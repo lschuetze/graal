@@ -9,13 +9,17 @@ import com.oracle.truffle.espresso.runtime.Attribute;
 public class CallinBindingsAttribute extends Attribute {
     public static final Symbol<Name> NAME = Name.CallinBindings;
 
+    public static final int KIND_BEFORE = 1;
+    public static final int KIND_REPLACE = 2;
+    public static final int KIND_AFTER = 3;
+
     static final short COVARIANT_BASE_RETURN = 8;
     static final short BASE_SUPER_CALL = 16;
 
     @CompilerDirectives.CompilationFinal(dimensions = 1) //
     private final MultiBinding[] callinBindings;
 
-    /** Represents all base method bindings of one callin binding. */
+    /** Represents all base method bindings of one callin binding. **/
     public static class MultiBinding {
         private final int roleClassNameIndex;
         private final int callinLabelIndex;

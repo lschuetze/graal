@@ -62,6 +62,7 @@ public abstract class EspressoRootNode extends RootNode implements ContextAccess
 
     private static final Object MONITOR_SLOT_KEY = new Object();
     private static final Object COOKIE_SLOT_KEY = new Object();
+    private static final Object BASE_METHOD_SLOT_KEY = new Object();
 
     @CompilationFinal private int monitorSlot;
     /**
@@ -70,6 +71,8 @@ public abstract class EspressoRootNode extends RootNode implements ContextAccess
      */
     @CompilationFinal private int cookieSlot;
 
+    @CompilationFinal private int baseMethodSlot;
+
     private final BranchProfile unbalancedMonitorProfile = BranchProfile.create();
 
     private EspressoRootNode(FrameDescriptor frameDescriptor, EspressoInstrumentableRootNode methodNode, boolean usesMonitors) {
@@ -77,6 +80,7 @@ public abstract class EspressoRootNode extends RootNode implements ContextAccess
         this.methodNode = methodNode;
         this.monitorSlot = usesMonitors ? SLOT_UNINITIALIZED : SLOT_UNUSED;
         this.cookieSlot = SLOT_UNINITIALIZED;
+        this.baseMethodSlot = SLOT_UNINITIALIZED;
     }
 
     // Splitting constructor
@@ -226,15 +230,32 @@ public abstract class EspressoRootNode extends RootNode implements ContextAccess
         frame.setAuxiliarySlot(cookieSlot, FrameCookie.createStackWalkCookie(anchor));
     }
 
+    public final void setFrameBaseMethod(Frame frame, Method baseMethod) {
+        initBaseSlot(frame);
+        frame.setAuxiliarySlot(baseMethodSlot, baseMethod);
+    }
+
     private FrameCookie getCookie(Frame frame) {
         initCookieSlot(frame);
         return (FrameCookie) frame.getAuxiliarySlot(cookieSlot);
+    }
+
+    private Method getBaseMethod(Frame frame) {
+        initBaseSlot(frame);
+        return (Method) frame.getAuxiliarySlot(baseMethodSlot);
     }
 
     private void initCookieSlot(Frame frame) {
         if (cookieSlot == SLOT_UNINITIALIZED) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             cookieSlot = frame.getFrameDescriptor().findOrAddAuxiliarySlot(COOKIE_SLOT_KEY);
+        }
+    }
+
+    private void initBaseSlot(Frame frame) {
+        if (baseMethodSlot == SLOT_UNINITIALIZED) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            baseMethodSlot = frame.getFrameDescriptor().findOrAddAuxiliarySlot(BASE_METHOD_SLOT_KEY);
         }
     }
 
@@ -252,6 +273,11 @@ public abstract class EspressoRootNode extends RootNode implements ContextAccess
             return cookie.getData();
         }
         return 0L;
+    }
+
+    public final Method readFrameBaseMethodOrNull(Frame frame) {
+        Method baseMethod = getBaseMethod(frame);
+        return baseMethod;
     }
 
     public boolean usesMonitors() {
